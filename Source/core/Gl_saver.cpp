@@ -1,7 +1,13 @@
-#import <GLKit/GLKit.h>
-#import <OpenGL/gl.h>
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#else
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+#include <GL/gl.h>
+#endif
+
 #include <chrono>
-#include <sys/sysctl.h>
 
 #include "Gl_saver.h"
 #include "Std.h"
@@ -65,9 +71,7 @@ void GLSetupRC(void) {
     glViewport(0, 0, (int)info->sys_glWidth, (int)info->sys_glHeight);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    GLKMatrix4 orthoMat = GLKMatrix4MakeOrtho(0, info->sys_glWidth, 0,
-                                              info->sys_glHeight, 0.0, 1.0);
-    glLoadMatrixf(orthoMat.m);
+    glOrtho(0, info->sys_glWidth, 0, info->sys_glHeight, 0.0, 1.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 

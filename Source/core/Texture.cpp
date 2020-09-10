@@ -7,13 +7,20 @@
  *
  */
 
-#include <Texture.h>
-#include <PTypes.h>
+#include "Texture.h"
+#include "PTypes.h"
 
-#import <OpenGL/gl.h>
-#import <OpenGL/glu.h>
+#ifdef __APPLE__
+#include <OpenGL/glu.h>
+#else
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+#include <GL/glu.h>
+#endif
 
 #include <stdlib.h>
+#define _USE_MATH_DEFINES // for M_PI
 #include <math.h>
 
 static GLubyte smallTextureArray[32][32];

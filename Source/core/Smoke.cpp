@@ -6,6 +6,7 @@
 #include "Smoke.h"
 #include "Spark.h"
 #include "Star.h"
+#include <cmath>
 
 #define MAXANGLES 16384
 #define NOT_QUITE_DEAD 3

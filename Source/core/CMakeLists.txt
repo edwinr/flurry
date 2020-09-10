@@ -1,0 +1,18 @@
+add_library(flurry_core
+	Gl_saver.cpp
+	Gl_saver.h
+	Particle.cpp
+	Particle.h
+	PTypes.h
+	Smoke.cpp
+	Smoke.h
+	SmokeParticle.h
+	Spark.cpp
+	Spark.h
+	Star.cpp
+	Star.h
+	Std.cpp
+	Std.h
+	Texture.cpp
+	Texture.h
+)

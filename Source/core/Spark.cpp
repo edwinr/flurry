@@ -4,6 +4,7 @@
 
 #include "Std.h"
 #include "Spark.h"
+#include <cmath>
 
 void InitSpark(Spark* s) {
     int i;
