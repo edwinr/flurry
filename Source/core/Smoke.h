@@ -6,6 +6,8 @@
 #define SMOKE_H
 
 #include "SmokeParticle.h"
+#include "Star.h"
+#include "Spark.h"
 
 #define NUMSMOKEPARTICLES 3600
 
@@ -24,8 +26,19 @@ typedef struct SmokeV {
 
 void InitSmoke(SmokeV* s);
 
-void UpdateSmoke_ScalarBase(SmokeV* s);
+void UpdateSmoke_ScalarBase(SmokeV* s,
+                            Star* star,
+                            double fTime,
+                            double fDeltaTime,
+                            int numStreams,
+                            Spark** sparks,
+                            int dframe,
+                            float drag);
 
-void DrawSmoke_Scalar(SmokeV* s);
+void DrawSmoke_Scalar(SmokeV* s,
+                      float screenWidth,
+                      float screenHeight,
+                      float streamExpansion,
+                      double fTime);
 
 #endif  // !defined(SMOKE_H)

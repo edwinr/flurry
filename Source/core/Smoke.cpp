@@ -25,11 +25,18 @@ void InitSmoke(SmokeV* s) {
     }
 }
 
-void UpdateSmoke_ScalarBase(SmokeV* s) {
+void UpdateSmoke_ScalarBase(SmokeV* s,
+                            Star* star,
+                            double fTime,
+                            double fDeltaTime,
+                            int numStreams,
+                            Spark** sparks,
+                            int dframe,
+                            float drag) {
     int i, j, k;
-    float sx = info->star->position[0];
-    float sy = info->star->position[1];
-    float sz = info->star->position[2];
+    float sx = star->position[0];
+    float sy = star->position[1];
+    float sz = star->position[2];
     double frameRate;
     double frameRateModifier;
 
@@ -37,7 +44,7 @@ void UpdateSmoke_ScalarBase(SmokeV* s) {
 
     if (!s->firstTime) {
         // release 12 puffs every frame
-        if (info->fTime - s->lastParticleTime >= 1.0f / 121.0f) {
+        if (fTime - s->lastParticleTime >= 1.0f / 121.0f) {
             float dx, dy, dz, deltax, deltay, deltaz;
             float f;
             float rsquared;
@@ -50,7 +57,7 @@ void UpdateSmoke_ScalarBase(SmokeV* s) {
             deltax = (dx * mag);
             deltay = (dy * mag);
             deltaz = (dz * mag);
-            for (i = 0; i < info->numStreams; i++) {
+            for (i = 0; i < numStreams; i++) {
                 float streamSpeedCoherenceFactor;
 
                 s->p[s->nextParticle].delta[0].f[s->nextSubParticle] = deltax;
@@ -65,11 +72,11 @@ void UpdateSmoke_ScalarBase(SmokeV* s) {
                 streamSpeedCoherenceFactor =
                     max(0.0f, 1.0f + RandBell(0.25f * incohesion));
                 dx = s->p[s->nextParticle].position[0].f[s->nextSubParticle] -
-                     info->spark[i]->position[0];
+                     sparks[i]->position[0];
                 dy = s->p[s->nextParticle].position[1].f[s->nextSubParticle] -
-                     info->spark[i]->position[1];
+                     sparks[i]->position[1];
                 dz = s->p[s->nextParticle].position[2].f[s->nextSubParticle] -
-                     info->spark[i]->position[2];
+                     sparks[i]->position[2];
                 rsquared = (dx * dx + dy * dy + dz * dz);
                 f = streamSpeed * streamSpeedCoherenceFactor;
 
@@ -82,17 +89,17 @@ void UpdateSmoke_ScalarBase(SmokeV* s) {
                 s->p[s->nextParticle].delta[2].f[s->nextSubParticle] -=
                     (dz * mag);
                 s->p[s->nextParticle].color[0].f[s->nextSubParticle] =
-                    info->spark[i]->color[0] *
+                    sparks[i]->color[0] *
                     (1.0f + RandBell(colorIncoherence));
                 s->p[s->nextParticle].color[1].f[s->nextSubParticle] =
-                    info->spark[i]->color[1] *
+                    sparks[i]->color[1] *
                     (1.0f + RandBell(colorIncoherence));
                 s->p[s->nextParticle].color[2].f[s->nextSubParticle] =
-                    info->spark[i]->color[2] *
+                    sparks[i]->color[2] *
                     (1.0f + RandBell(colorIncoherence));
                 s->p[s->nextParticle].color[3].f[s->nextSubParticle] =
                     0.85f * (1.0f + RandBell(0.5f * colorIncoherence));
-                s->p[s->nextParticle].time.f[s->nextSubParticle] = info->fTime;
+                s->p[s->nextParticle].time.f[s->nextSubParticle] = fTime;
                 s->p[s->nextParticle].dead.i[s->nextSubParticle] = FALSE;
                 s->p[s->nextParticle].animFrame.i[s->nextSubParticle] =
                     rand() & 63;
@@ -107,18 +114,18 @@ void UpdateSmoke_ScalarBase(SmokeV* s) {
                 }
             }
 
-            s->lastParticleTime = info->fTime;
+            s->lastParticleTime = fTime;
         }
     } else {
-        s->lastParticleTime = info->fTime;
+        s->lastParticleTime = fTime;
         s->firstTime = 0;
     }
 
     for (i = 0; i < 3; i++) {
-        s->old[i] = info->star->position[i];
+        s->old[i] = star->position[i];
     }
 
-    frameRate = ((double)info->dframe) / (info->fTime);
+    frameRate = ((double)dframe) / (fTime);
     frameRateModifier = 42.5f / frameRate;
 
     for (i = 0; i < NUMSMOKEPARTICLES / 4; i++) {
@@ -139,15 +146,15 @@ void UpdateSmoke_ScalarBase(SmokeV* s) {
             deltay = s->p[i].delta[1].f[k];
             deltaz = s->p[i].delta[2].f[k];
 
-            for (j = 0; j < info->numStreams; j++) {
-                dx = s->p[i].position[0].f[k] - info->spark[j]->position[0];
-                dy = s->p[i].position[1].f[k] - info->spark[j]->position[1];
-                dz = s->p[i].position[2].f[k] - info->spark[j]->position[2];
+            for (j = 0; j < numStreams; j++) {
+                dx = s->p[i].position[0].f[k] - sparks[j]->position[0];
+                dy = s->p[i].position[1].f[k] - sparks[j]->position[1];
+                dz = s->p[i].position[2].f[k] - sparks[j]->position[2];
                 rsquared = (dx * dx + dy * dy + dz * dz);
 
                 f = (gravity / rsquared) * frameRateModifier;
 
-                if ((((i * 4) + k) % info->numStreams) == j) {
+                if ((((i * 4) + k) % numStreams) == j) {
                     f *= 1.0f + streamBias;
                 }
 
@@ -159,9 +166,9 @@ void UpdateSmoke_ScalarBase(SmokeV* s) {
             }
 
             // slow this particle down by info->drag
-            deltax *= info->drag;
-            deltay *= info->drag;
-            deltaz *= info->drag;
+            deltax *= drag;
+            deltay *= drag;
+            deltaz *= drag;
 
             if ((deltax * deltax + deltay * deltay + deltaz * deltaz) >=
                 25000000.0f) {
@@ -176,13 +183,17 @@ void UpdateSmoke_ScalarBase(SmokeV* s) {
             for (j = 0; j < 3; j++) {
                 s->p[i].oldposition[j].f[k] = s->p[i].position[j].f[k];
                 s->p[i].position[j].f[k] +=
-                    (s->p[i].delta[j].f[k]) * info->fDeltaTime;
+                    (s->p[i].delta[j].f[k]) * fDeltaTime;
             }
         }
     }
 }
 
-void DrawSmoke_Scalar(SmokeV* s) {
+void DrawSmoke_Scalar(SmokeV* s,
+                      float screenWidth,
+                      float screenHeight,
+                      float streamExpansion,
+                      double fTime) {
     int svi = 0;
     int sci = 0;
     int sti = 0;
@@ -191,12 +202,12 @@ void DrawSmoke_Scalar(SmokeV* s) {
     float sx, sy;
     float u0, v0, u1, v1;
     float w, z;
-    float screenRatio = info->sys_glWidth / 1024.0f;
-    float hslash2 = info->sys_glHeight * 0.5f;
-    float wslash2 = info->sys_glWidth * 0.5f;
+    float screenRatio = screenWidth / 1024.0f;
+    float hslash2 = screenHeight * 0.5f;
+    float wslash2 = screenWidth * 0.5f;
     int i, k;
 
-    width = (streamSize + 2.5f * info->streamExpansion) * screenRatio;
+    width = (streamSize + 2.5f * streamExpansion) * screenRatio;
 
     for (i = 0; i < NUMSMOKEPARTICLES / 4; i++) {
         for (k = 0; k < 4; k++) {
@@ -208,18 +219,18 @@ void DrawSmoke_Scalar(SmokeV* s) {
             }
             thisWidth =
                 (streamSize +
-                 (info->fTime - s->p[i].time.f[k]) * info->streamExpansion) *
+                 (fTime - s->p[i].time.f[k]) * streamExpansion) *
                 screenRatio;
             if (thisWidth >= width) {
                 s->p[i].dead.i[k] = TRUE;
                 continue;
             }
             z = s->p[i].position[2].f[k];
-            sx = s->p[i].position[0].f[k] * info->sys_glWidth / z + wslash2;
-            sy = s->p[i].position[1].f[k] * info->sys_glWidth / z + hslash2;
+            sx = s->p[i].position[0].f[k] * screenWidth / z + wslash2;
+            sy = s->p[i].position[1].f[k] * screenWidth / z + hslash2;
             oldz = s->p[i].oldposition[2].f[k];
-            if (sx > info->sys_glWidth + 50.0f || sx < -50.0f ||
-                sy > info->sys_glHeight + 50.0f || sy < -50.0f || z < 25.0f ||
+            if (sx > screenWidth + 50.0f || sx < -50.0f ||
+                sy > screenHeight + 50.0f || sy < -50.0f || z < 25.0f ||
                 oldz < 25.0f) {
                 continue;
             }
@@ -228,8 +239,8 @@ void DrawSmoke_Scalar(SmokeV* s) {
             {
                 float oldx = s->p[i].oldposition[0].f[k];
                 float oldy = s->p[i].oldposition[1].f[k];
-                float oldscreenx = (oldx * info->sys_glWidth / oldz) + wslash2;
-                float oldscreeny = (oldy * info->sys_glWidth / oldz) + hslash2;
+                float oldscreenx = (oldx * screenWidth / oldz) + wslash2;
+                float oldscreeny = (oldy * screenWidth / oldz) + hslash2;
                 float dx = (sx - oldscreenx);
                 float dy = (sy - oldscreeny);
 

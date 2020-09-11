@@ -22,7 +22,7 @@ typedef struct Particle {
     int animFrame;
 } Particle;
 
-void InitParticle(Particle* p);
-void UpdateParticle(Particle* p);
+void InitParticle(Particle* p, float screenWidth, float screenHeight);
+void UpdateParticle(Particle* p, double fDeltaTime);
 
 #endif  // !defined(PARTICLE_H)

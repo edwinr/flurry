@@ -12,8 +12,15 @@ typedef struct Spark {
     float color[4];
 } Spark;
 
-void UpdateSparkColour(Spark* s);
+void UpdateSparkColour(Spark* s,
+                       double fTime,
+                       int currentColorMode,
+                       double flurryRandomSeed);
 void InitSpark(Spark* s);
-void UpdateSpark(Spark* s);
+void UpdateSpark(Spark* s,
+                 double fTime,
+                 double fDeltaTime,
+                 int currentColorMode,
+                 double flurryRandomSeed);
 
 #endif  // !defined(SPARK_H)

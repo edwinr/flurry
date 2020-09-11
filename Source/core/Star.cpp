@@ -22,11 +22,11 @@ void InitStar(Star* s) {
 #define BIGMYSTERY 1800.0
 #define MAXANGLES 16384
 
-void UpdateStar(Star* s) {
+void UpdateStar(Star* s, double fTime) {
     float rotationsPerSecond =
         (float)(2.0 * PI * 12.0 / MAXANGLES) * s->rotSpeed /* speed control */;
     double thisPointInRadians;
-    double thisAngle = info->fTime * rotationsPerSecond;
+    double thisAngle = fTime * rotationsPerSecond;
     float cf;
     double tmpX1, tmpY1, tmpZ1;
     double tmpX2, tmpY2, tmpZ2;
@@ -38,9 +38,9 @@ void UpdateStar(Star* s) {
 
     s->ate = false;
 
-    cf = ((float)(cos(7.0 * ((info->fTime) * rotationsPerSecond)) +
-                  cos(3.0 * ((info->fTime) * rotationsPerSecond)) +
-                  cos(13.0 * ((info->fTime) * rotationsPerSecond))));
+    cf = ((float)(cos(7.0 * ((fTime) * rotationsPerSecond)) +
+                  cos(3.0 * ((fTime) * rotationsPerSecond)) +
+                  cos(13.0 * ((fTime) * rotationsPerSecond))));
     cf /= 6.0f;
     cf += 0.75f;
     thisPointInRadians = 2.0 * PI * (double)s->mystery / (double)BIGMYSTERY;

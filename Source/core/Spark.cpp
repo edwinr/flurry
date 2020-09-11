@@ -16,10 +16,13 @@ void InitSpark(Spark* s) {
 #define BIGMYSTERY 1800.0
 #define MAXANGLES 16384
 
-void UpdateSparkColour(Spark* s) {
+void UpdateSparkColour(Spark* s,
+                       double fTime,
+                       int currentColorMode,
+                       double flurryRandomSeed) {
     const float rotationsPerSecond = (float)(2.0 * PI * fieldSpeed / MAXANGLES);
     double thisPointInRadians;
-    double thisAngle = info->fTime * rotationsPerSecond;
+    double thisAngle = fTime * rotationsPerSecond;
     float cycleTime = 20.0f;
     float colorRot;
     float redPhaseShift;
@@ -30,36 +33,36 @@ void UpdateSparkColour(Spark* s) {
     float baseBlue;
     float colorTime;
 
-    if (info->currentColorMode == rainbowColorMode) {
+    if (currentColorMode == rainbowColorMode) {
         cycleTime = 1.5f;
-    } else if (info->currentColorMode == tiedyeColorMode) {
+    } else if (currentColorMode == tiedyeColorMode) {
         cycleTime = 4.5f;
-    } else if (info->currentColorMode == cyclicColorMode) {
+    } else if (currentColorMode == cyclicColorMode) {
         cycleTime = 20.0f;
-    } else if (info->currentColorMode == slowCyclicColorMode) {
+    } else if (currentColorMode == slowCyclicColorMode) {
         cycleTime = 120.0f;
     }
     colorRot = (float)(2.0 * PI / cycleTime);
     redPhaseShift = 0.0f;  // cycleTime * 0.0f / 3.0f
     greenPhaseShift = cycleTime / 3.0f;
     bluePhaseShift = cycleTime * 2.0f / 3.0f;
-    if (info->currentColorMode == whiteColorMode) {
+    if (currentColorMode == whiteColorMode) {
         baseRed = 0.1875f;
         baseGreen = 0.1875f;
         baseBlue = 0.1875f;
-    } else if (info->currentColorMode == multiColorMode) {
+    } else if (currentColorMode == multiColorMode) {
         baseRed = 0.0625f;
         baseGreen = 0.0625f;
         baseBlue = 0.0625f;
-    } else if (info->currentColorMode == darkColorMode) {
+    } else if (currentColorMode == darkColorMode) {
         baseRed = 0.0f;
         baseGreen = 0.0f;
         baseBlue = 0.0f;
     } else {
-        if (info->currentColorMode < slowCyclicColorMode) {
-            colorTime = (info->currentColorMode / 6.0f) * cycleTime;
+        if (currentColorMode < slowCyclicColorMode) {
+            colorTime = (currentColorMode / 6.0f) * cycleTime;
         } else {
-            colorTime = info->fTime + info->flurryRandomSeed;
+            colorTime = fTime + flurryRandomSeed;
         }
         baseRed = 0.109375f *
                   ((float)cos((colorTime + redPhaseShift) * colorRot) + 1.0f);
@@ -86,10 +89,15 @@ void UpdateSparkColour(Spark* s) {
             (0.5f + (float)cos((37.0 * (thisPointInRadians + thisAngle))));
 }
 
-void UpdateSpark(Spark* s) {
+void UpdateSpark(Spark* s,
+                 double fTime,
+                 double fDeltaTime,
+                 int currentColorMode,
+                 double flurryRandomSeed) {
+    //global_info_t* info;
     const float rotationsPerSecond = (float)(2.0 * PI * fieldSpeed / MAXANGLES);
     double thisPointInRadians;
-    double thisAngle = info->fTime * rotationsPerSecond;
+    double thisAngle = fTime * rotationsPerSecond;
     float cf;
     int i;
     double tmpX1, tmpY1, tmpZ1;
@@ -111,36 +119,36 @@ void UpdateSpark(Spark* s) {
 
     float old[3];
 
-    if (info->currentColorMode == rainbowColorMode) {
+    if (currentColorMode == rainbowColorMode) {
         cycleTime = 1.5f;
-    } else if (info->currentColorMode == tiedyeColorMode) {
+    } else if (currentColorMode == tiedyeColorMode) {
         cycleTime = 4.5f;
-    } else if (info->currentColorMode == cyclicColorMode) {
+    } else if (currentColorMode == cyclicColorMode) {
         cycleTime = 20.0f;
-    } else if (info->currentColorMode == slowCyclicColorMode) {
+    } else if (currentColorMode == slowCyclicColorMode) {
         cycleTime = 120.0f;
     }
     colorRot = (float)(2.0 * PI / cycleTime);
     redPhaseShift = 0.0f;  // cycleTime * 0.0f / 3.0f
     greenPhaseShift = cycleTime / 3.0f;
     bluePhaseShift = cycleTime * 2.0f / 3.0f;
-    if (info->currentColorMode == whiteColorMode) {
+    if (currentColorMode == whiteColorMode) {
         baseRed = 0.1875f;
         baseGreen = 0.1875f;
         baseBlue = 0.1875f;
-    } else if (info->currentColorMode == multiColorMode) {
+    } else if (currentColorMode == multiColorMode) {
         baseRed = 0.0625f;
         baseGreen = 0.0625f;
         baseBlue = 0.0625f;
-    } else if (info->currentColorMode == darkColorMode) {
+    } else if (currentColorMode == darkColorMode) {
         baseRed = 0.0f;
         baseGreen = 0.0f;
         baseBlue = 0.0f;
     } else {
-        if (info->currentColorMode < slowCyclicColorMode) {
-            colorTime = (info->currentColorMode / 6.0f) * cycleTime;
+        if (currentColorMode < slowCyclicColorMode) {
+            colorTime = (currentColorMode / 6.0f) * cycleTime;
         } else {
-            colorTime = info->fTime + info->flurryRandomSeed;
+            colorTime = fTime + flurryRandomSeed;
         }
         baseRed = 0.109375f *
                   ((float)cos((colorTime + redPhaseShift) * colorRot) + 1.0f);
@@ -155,9 +163,9 @@ void UpdateSpark(Spark* s) {
         old[i] = s->position[i];
     }
 
-    cf = ((float)(cos(7.0 * ((info->fTime) * rotationsPerSecond)) +
-                  cos(3.0 * ((info->fTime) * rotationsPerSecond)) +
-                  cos(13.0 * ((info->fTime) * rotationsPerSecond))));
+    cf = ((float)(cos(7.0 * ((fTime) * rotationsPerSecond)) +
+                  cos(3.0 * ((fTime) * rotationsPerSecond)) +
+                  cos(13.0 * ((fTime) * rotationsPerSecond))));
     cf /= 6.0f;
     cf += 2.0f;
     thisPointInRadians = 2.0 * PI * (double)s->mystery / (double)BIGMYSTERY;
@@ -213,6 +221,6 @@ void UpdateSpark(Spark* s) {
     s->position[2] = (float)tmpZ4 + RandBell(5.0f * fieldCoherence);
 
     for (i = 0; i < 3; i++) {
-        s->delta[i] = (s->position[i] - old[i]) / info->fDeltaTime;
+        s->delta[i] = (s->position[i] - old[i]) / fDeltaTime;
     }
 }

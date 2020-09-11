@@ -16,10 +16,6 @@
 #include "Spark.h"
 #include "Particle.h"
 
-// some globals
-// long TimeFreq, TimeStart;
-global_info_t* info = NULL;
-
 double TimeInSecondsSinceStart(void) {
     static auto start = std::chrono::high_resolution_clock::now();
 
@@ -34,7 +30,7 @@ double TimeInSecondsSinceStart(void) {
 // Do any initialization of the rendering context here, such as
 // setting background colors, setting up lighting, or performing
 // preliminary calculations.
-void GLSetupRC(void) {
+void GLSetupRC(global_info_t* info) {
     int i, k;
 
     info->spark[0]->mystery = 1800 / 13;
@@ -56,7 +52,7 @@ void GLSetupRC(void) {
     }
 
     for (i = 0; i < 12; i++) {
-        UpdateSpark(info->spark[i]);
+        UpdateSpark(info->spark[i], info->fTime, info->fDeltaTime, info->currentColorMode, info->flurryRandomSeed);
     }
 
     // setup the defaults for OpenGL
@@ -89,7 +85,7 @@ void GLSetupRC(void) {
 //////////////////////////////////////////////////////////////////
 // Render the OpenGL Scene here. Called by the WM_PAINT message
 // handler.
-void GLRenderScene(void) {
+void GLRenderScene(global_info_t* info) {
     int i;
 
     info->dframe++;
@@ -101,24 +97,26 @@ void GLRenderScene(void) {
     info->drag = (float)pow(0.9965, info->fDeltaTime * 85.0);
 
     for (i = 0; i < numParticles; i++) {
-        UpdateParticle(info->p[i]);
+        UpdateParticle(info->p[i], info->fDeltaTime);
     }
-    UpdateStar(info->star);
+    UpdateStar(info->star, info->fTime);
     for (i = 0; i < info->numStreams; i++) {
-        UpdateSpark(info->spark[i]);
+        UpdateSpark(info->spark[i], info->fTime, info->fDeltaTime, info->currentColorMode, info->flurryRandomSeed);
     }
 
-    UpdateSmoke_ScalarBase(info->s);
+    UpdateSmoke_ScalarBase(info->s, info->star, info->fTime, info->fDeltaTime,
+                           info->numStreams, info->spark, info->dframe,
+                           info->drag);
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     glEnable(GL_TEXTURE_2D);
 
-    DrawSmoke_Scalar(info->s);
+    DrawSmoke_Scalar(info->s, info->sys_glWidth, info->sys_glHeight, info->streamExpansion, info->fTime);
 
     glDisable(GL_TEXTURE_2D);
 }
 
-void GLResize(float w, float h) {
+void GLResize(global_info_t* info, float w, float h) {
     info->sys_glWidth = w;
     info->sys_glHeight = h;
 }

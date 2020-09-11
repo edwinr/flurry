@@ -12,7 +12,7 @@ typedef struct Star {
     float rotSpeed;
 } Star;
 
-void UpdateStar(Star* s);
+void UpdateStar(Star* s, double fTime);
 void InitStar(Star* s);
 
 #endif  // !defined(STAR_H)

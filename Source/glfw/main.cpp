@@ -47,14 +47,13 @@ int main() {
     glfwMakeContextCurrent(window);
 
     auto info = std::make_unique<global_info_t>();
-    ::info = info.get();
     initFlurry(info.get());
 
     MakeTexture();
 
     int width = 800, height = 600;
-    GLResize(width, height);
-    GLSetupRC();
+    GLResize(info.get(), width, height);
+    GLSetupRC(info.get());
 
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -74,14 +73,14 @@ int main() {
 
         glfwGetWindowSize(window, &width, &height);
         glViewport(0.0, 0.0, width, height);
-        GLResize(width, height);
+        GLResize(info.get(), width, height);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glOrtho(0, width, 0, height, 0.0, 1.0);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
 
-        GLRenderScene();
+        GLRenderScene(info.get());
         
         glfwSwapBuffers(window);
         glfwPollEvents();

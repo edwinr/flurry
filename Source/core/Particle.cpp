@@ -7,17 +7,17 @@
 #define MAXANGLES 16384
 extern int theTexture;
 
-void UpdateParticle(Particle* p) {
+void UpdateParticle(Particle* p, double fDeltaTime) {
     p->oldx = p->x;
     p->oldy = p->y;
     p->oldz = p->z;
 
-    p->x += p->deltax * info->fDeltaTime;
-    p->y += p->deltay * info->fDeltaTime;
-    p->z += p->deltaz * info->fDeltaTime;
+    p->x += p->deltax * fDeltaTime;
+    p->y += p->deltay * fDeltaTime;
+    p->z += p->deltaz * fDeltaTime;
 }
 
-void InitParticle(Particle* p) {
+void InitParticle(Particle* p, float screenWidth, float screenHeight) {
     //	float tempx,tempy;
     int r1, r2;
     p->oldz = RandFlt(2500.0f, 22500.0f);
@@ -26,17 +26,17 @@ void InitParticle(Particle* p) {
     r1 = rand();
     r2 = rand();
     p->oldx =
-        ((float)(r1 % (int)info->sys_glWidth) - info->sys_glWidth * 0.5f) /
-        (info->sys_glWidth / p->oldz);
+        ((float)(r1 % (int)screenWidth) - screenWidth * 0.5f) /
+        (screenWidth / p->oldz);
     p->oldy =
-        (info->sys_glHeight * 0.5f - (float)(r2 % (int)info->sys_glHeight)) /
-        (info->sys_glWidth / p->oldz);
-    //		tempx = (oldx * info->sys_glWidth / 75.0f) +
-    // info->sys_glWidth/2.0f;
-    //		tempy = (oldy * info->sys_glWidth / 75.0f) +
-    // info->sys_glHeight/2.0f;
-    //	} while (fabs(tempx) < info->sys_glWidth + 100.0 && fabs(tempy) <
-    // info->sys_glHeight + 100.0);
+        (screenHeight * 0.5f - (float)(r2 % (int)screenHeight)) /
+        (screenWidth / p->oldz);
+    //		tempx = (oldx * screenWidth / 75.0f) +
+    // screenWidth/2.0f;
+    //		tempy = (oldy * screenWidth / 75.0f) +
+    // screenHeight/2.0f;
+    //	} while (fabs(tempx) < screenWidth + 100.0 && fabs(tempy) <
+    // screenHeight + 100.0);
     p->deltax = 0.0f;
     p->deltay = 0.0f;
     p->deltaz = (float)-starSpeed;

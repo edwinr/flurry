@@ -76,14 +76,12 @@ typedef struct global_info_t {
     Spark* spark[64];
 } global_info_t;
 
-extern global_info_t* info;
-
 #define kNumSpectrumEntries 512
 
 double TimeInSecondsSinceStart();
 
-void GLSetupRC(void);
-void GLRenderScene(void);
-void GLResize(float w, float h);
+void GLSetupRC(global_info_t* info);
+void GLRenderScene(global_info_t* info);
+void GLResize(global_info_t* info, float w, float h);
 
 #endif  // Include/Define
