@@ -8,16 +8,6 @@
 #ifndef __STD_h_
 #define __STD_h_
 
-#ifdef __APPLE__
-#include <OpenGL/glu.h>
-#else
-#ifdef _WIN32
-#include <Windows.h>
-#endif
-#include <GL/glu.h>
-#endif
-
-
 #include "PTypes.h"
 #include "Gl_saver.h"
 

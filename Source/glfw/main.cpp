@@ -4,6 +4,8 @@
 #include <GLFW/glfw3.h>
 #include <memory>
 
+#include "../opengl/FlurryOpenGL.h"
+
 static void initFlurry(global_info_t* flurry_info) {
     flurry_info->flurryRandomSeed = RandFlt(0.0, 300.0);
 
@@ -49,14 +51,11 @@ int main() {
     auto info = std::make_unique<global_info_t>();
     initFlurry(info.get());
 
-    MakeTexture();
+    FlurryOpenGL flurryOpenGL;
 
     int width = 800, height = 600;
-    GLResize(info.get(), width, height);
+    flurryOpenGL.init(width, height);
     GLSetupRC(info.get());
-
-    glClearColor(0.0, 0.0, 0.0, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT);
 
     double oldFrameTime = TimeInSecondsSinceStart();
 
@@ -67,20 +66,17 @@ int main() {
             alpha = 0.2;
         oldFrameTime = newFrameTime;
 
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glColor4f(0.0, 0.0, 0.0, alpha);
-        glRectd(0, 0, width, height);
-
         glfwGetWindowSize(window, &width, &height);
-        glViewport(0.0, 0.0, width, height);
+        flurryOpenGL.resize(width, height);
         GLResize(info.get(), width, height);
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(0, width, 0, height, 0.0, 1.0);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
 
+        flurryOpenGL.darkenBackground(alpha);
+        
         GLRenderScene(info.get());
+        flurryOpenGL.drawFlurryParticles(
+            info->s->numQuads * 4, info->s->seraphimVertices,
+            info->s->seraphimColors, info->s->seraphimTextures);
+
         
         glfwSwapBuffers(window);
         glfwPollEvents();

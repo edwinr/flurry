@@ -1,12 +1,3 @@
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#else
-#ifdef _WIN32
-#include <Windows.h>
-#endif
-#include <GL/gl.h>
-#endif
-
 #include <chrono>
 
 #include "Gl_saver.h"
@@ -45,38 +36,16 @@ void GLSetupRC(global_info_t* info) {
     info->spark[9]->mystery = (1800 * 10) / 13;
     info->spark[10]->mystery = (1800 * 11) / 13;
     info->spark[11]->mystery = (1800 * 12) / 13;
+
     for (i = 0; i < NUMSMOKEPARTICLES / 4; i++) {
         for (k = 0; k < 4; k++) {
-            info->s->p[i].dead.i[k] = TRUE;
+            info->s->p[i].dead.i[k] = 1;
         }
     }
 
     for (i = 0; i < 12; i++) {
         UpdateSpark(info->spark[i], info->fTime, info->fDeltaTime, info->currentColorMode, info->flurryRandomSeed);
     }
-
-    // setup the defaults for OpenGL
-    glDisable(GL_DEPTH_TEST);
-    glAlphaFunc(GL_GREATER, 0.0f);
-    glEnable(GL_ALPHA_TEST);
-    glShadeModel(GL_FLAT);
-    glDisable(GL_LIGHTING);
-    glDisable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
-
-    glViewport(0, 0, (int)info->sys_glWidth, (int)info->sys_glHeight);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, info->sys_glWidth, 0, info->sys_glHeight, 0.0, 1.0);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    glClearColor(0.0, 0.0, 0.0, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glEnableClientState(GL_COLOR_ARRAY);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
     info->fOldTime = TimeInSecondsSinceStart() + info->flurryRandomSeed;
 }
@@ -108,12 +77,7 @@ void GLRenderScene(global_info_t* info) {
                            info->numStreams, info->spark, info->dframe,
                            info->drag);
 
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-    glEnable(GL_TEXTURE_2D);
-
-    DrawSmoke_Scalar(info->s, info->sys_glWidth, info->sys_glHeight, info->streamExpansion, info->fTime);
-
-    glDisable(GL_TEXTURE_2D);
+    PrepareSmokeVertices_Scalar(info->s, info->sys_glWidth, info->sys_glHeight, info->streamExpansion, info->fTime);
 }
 
 void GLResize(global_info_t* info, float w, float h) {

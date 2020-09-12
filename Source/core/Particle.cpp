@@ -4,6 +4,7 @@
 
 #include "Std.h"
 #include "Particle.h"
+#include <cstdlib>
 #define MAXANGLES 16384
 extern int theTexture;
 

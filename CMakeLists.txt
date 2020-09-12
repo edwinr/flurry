@@ -3,3 +3,4 @@ project (Flurry)
 
 add_subdirectory(Source/core)
 add_subdirectory(Source/glfw)
+add_subdirectory(Source/opengl)

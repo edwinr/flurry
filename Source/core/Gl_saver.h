@@ -1,14 +1,7 @@
 #ifndef __GLCODE__
 #define __GLCODE__
 
-#ifdef __APPLE__
-#include <OpenGL/glu.h>
-#else
-#ifdef _WIN32
-#include <Windows.h>
-#endif
-#include <GL/glu.h>
-#endif
+
 
 #include "Smoke.h"
 #include "Star.h"

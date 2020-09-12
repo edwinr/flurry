@@ -10,26 +10,13 @@
 #include "Texture.h"
 #include "PTypes.h"
 
-#ifdef __APPLE__
-#include <OpenGL/glu.h>
-#else
-#ifdef _WIN32
-#include <Windows.h>
-#endif
-#include <GL/glu.h>
-#endif
-
 #include <stdlib.h>
 #define _USE_MATH_DEFINES // for M_PI
 #include <math.h>
 
-static GLubyte smallTextureArray[32][32];
-static GLubyte bigTextureArray[256][256][2];
-GLuint theTexture = 0;
-
 // simple smoothing routine
-static void SmoothTexture() {
-    GLubyte filter[32][32];
+static void SmoothTexture(unsigned char smallTextureArray[32][32]) {
+    unsigned char filter[32][32];
     int i, j;
     float t;
     for (i = 1; i < 31; i++) {
@@ -40,7 +27,7 @@ static void SmoothTexture() {
             t += (float)smallTextureArray[i][j - 1];
             t += (float)smallTextureArray[i][j + 1];
             t /= 8.0f;
-            filter[i][j] = (GLubyte)t;
+            filter[i][j] = (unsigned char)t;
         }
     }
     for (i = 1; i < 31; i++) {
@@ -51,7 +38,7 @@ static void SmoothTexture() {
 }
 
 // add some randomness to texture data
-static void SpeckleTexture() {
+static void SpeckleTexture(unsigned char smallTextureArray[32][32]) {
     int i, j;
     int speck;
     float t;
@@ -60,20 +47,20 @@ static void SpeckleTexture() {
             speck = 1;
             while (speck <= 32 && rand() % 2) {
                 t = (float)min(255, smallTextureArray[i][j] + speck);
-                smallTextureArray[i][j] = (GLubyte)t;
+                smallTextureArray[i][j] = (unsigned char)t;
                 speck += speck;
             }
             speck = 1;
             while (speck <= 32 && rand() % 2) {
                 t = (float)max(0, smallTextureArray[i][j] - speck);
-                smallTextureArray[i][j] = (GLubyte)t;
+                smallTextureArray[i][j] = (unsigned char)t;
                 speck += speck;
             }
         }
     }
 }
 
-static void MakeSmallTexture() {
+static void MakeSmallTexture(unsigned char smallTextureArray[32][32]) {
     static int firstTime = 1;
     int i, j;
     float r, t;
@@ -87,7 +74,7 @@ static void MakeSmallTexture() {
                     smallTextureArray[i][j] = 0;
                 } else {
                     t = 255.0f * (float)cos(r * M_PI / 31.0);
-                    smallTextureArray[i][j] = (GLubyte)t;
+                    smallTextureArray[i][j] = (unsigned char)t;
                 }
             }
         }
@@ -101,19 +88,23 @@ static void MakeSmallTexture() {
                 } else {
                     t = 255.0f * (float)cos(r * M_PI / 31.0);
                 }
-                smallTextureArray[i][j] = (GLubyte)min(
+                smallTextureArray[i][j] = (unsigned char)min(
                     255,
                     (t + smallTextureArray[i][j] + smallTextureArray[i][j]) /
                         3);
             }
         }
     }
-    SpeckleTexture();
-    SmoothTexture();
-    SmoothTexture();
+    SpeckleTexture(smallTextureArray);
+    SmoothTexture(smallTextureArray);
+    SmoothTexture(smallTextureArray);
 }
 
-static void CopySmallTextureToBigTexture(int k, int l) {
+static void CopySmallTextureToBigTexture(
+    unsigned char smallTextureArray[32][32],
+    unsigned char bigTextureArray[256][256][2],
+    int k,
+    int l) {
     int i, j;
     for (i = 0; i < 32; i++) {
         for (j = 0; j < 32; j++) {
@@ -123,45 +114,31 @@ static void CopySmallTextureToBigTexture(int k, int l) {
     }
 }
 
-static void AverageLastAndFirstTextures() {
+static void AverageLastAndFirstTextures(
+    unsigned char smallTextureArray[32][32],
+    unsigned char bigTextureArray[256][256][2]) {
     int i, j;
     int t;
     for (i = 0; i < 32; i++) {
         for (j = 0; j < 32; j++) {
             t = (smallTextureArray[i][j] + bigTextureArray[i][j][0]) / 2;
-            smallTextureArray[i][j] = (GLubyte)min(255, t);
+            smallTextureArray[i][j] = (unsigned char)min(255, t);
         }
     }
 }
 
-void MakeTexture(void) {
+void MakeTexture(unsigned char bigTextureArray[256][256][2]) {
+    unsigned char smallTextureArray[32][32];
     int i, j;
     for (i = 0; i < 8; i++) {
         for (j = 0; j < 8; j++) {
             if (i == 7 && j == 7) {
-                AverageLastAndFirstTextures();
+                AverageLastAndFirstTextures(smallTextureArray, bigTextureArray);
             } else {
-                MakeSmallTexture();
+                MakeSmallTexture(smallTextureArray);
             }
-            CopySmallTextureToBigTexture(i * 32, j * 32);
+            CopySmallTextureToBigTexture(smallTextureArray, bigTextureArray,
+                                         i * 32, j * 32);
         }
     }
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    glGenTextures(1, &theTexture);
-    glBindTexture(GL_TEXTURE_2D, theTexture);
-
-    // Set the tiling mode (this is generally always GL_REPEAT).
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    // Set the filtering.
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                    GL_LINEAR_MIPMAP_NEAREST);
-
-    gluBuild2DMipmaps(GL_TEXTURE_2D, 2, 256, 256, GL_LUMINANCE_ALPHA,
-                      GL_UNSIGNED_BYTE, bigTextureArray);
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 }

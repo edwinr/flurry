@@ -19,6 +19,8 @@ typedef struct SmokeV {
     int firstTime;
     long frame;
     float old[3];
+
+    int numQuads;
     floatToVector seraphimVertices[NUMSMOKEPARTICLES * 2 + 1];
     floatToVector seraphimColors[NUMSMOKEPARTICLES * 4 + 1];
     float seraphimTextures[NUMSMOKEPARTICLES * 2 * 4];
@@ -35,7 +37,7 @@ void UpdateSmoke_ScalarBase(SmokeV* s,
                             int dframe,
                             float drag);
 
-void DrawSmoke_Scalar(SmokeV* s,
+void PrepareSmokeVertices_Scalar(SmokeV* s,
                       float screenWidth,
                       float screenHeight,
                       float streamExpansion,

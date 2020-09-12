@@ -100,7 +100,7 @@ void UpdateSmoke_ScalarBase(SmokeV* s,
                 s->p[s->nextParticle].color[3].f[s->nextSubParticle] =
                     0.85f * (1.0f + RandBell(0.5f * colorIncoherence));
                 s->p[s->nextParticle].time.f[s->nextSubParticle] = fTime;
-                s->p[s->nextParticle].dead.i[s->nextSubParticle] = FALSE;
+                s->p[s->nextParticle].dead.i[s->nextSubParticle] = 0;
                 s->p[s->nextParticle].animFrame.i[s->nextSubParticle] =
                     rand() & 63;
                 s->nextSubParticle++;
@@ -172,7 +172,7 @@ void UpdateSmoke_ScalarBase(SmokeV* s,
 
             if ((deltax * deltax + deltay * deltay + deltaz * deltaz) >=
                 25000000.0f) {
-                s->p[i].dead.i[k] = TRUE;
+                s->p[i].dead.i[k] = 1;
                 continue;
             }
 
@@ -189,11 +189,11 @@ void UpdateSmoke_ScalarBase(SmokeV* s,
     }
 }
 
-void DrawSmoke_Scalar(SmokeV* s,
-                      float screenWidth,
-                      float screenHeight,
-                      float streamExpansion,
-                      double fTime) {
+void PrepareSmokeVertices_Scalar(SmokeV* s,
+                                 float screenWidth,
+                                 float screenHeight,
+                                 float streamExpansion,
+                                 double fTime) {
     int svi = 0;
     int sci = 0;
     int sti = 0;
@@ -214,7 +214,7 @@ void DrawSmoke_Scalar(SmokeV* s,
             float thisWidth;
             float oldz;
 
-            if (s->p[i].dead.i[k] == TRUE) {
+            if (s->p[i].dead.i[k] == 1) {
                 continue;
             }
             thisWidth =
@@ -222,7 +222,7 @@ void DrawSmoke_Scalar(SmokeV* s,
                  (fTime - s->p[i].time.f[k]) * streamExpansion) *
                 screenRatio;
             if (thisWidth >= width) {
-                s->p[i].dead.i[k] = TRUE;
+                s->p[i].dead.i[k] = 1;
                 continue;
             }
             z = s->p[i].position[2].f[k];
@@ -283,7 +283,7 @@ void DrawSmoke_Scalar(SmokeV* s,
                     cm = (1.375f - thisWidth / width);
                     if (s->p[i].dead.i[k] == 3) {
                         cm *= 0.125f;
-                        s->p[i].dead.i[k] = TRUE;
+                        s->p[i].dead.i[k] = 1;
                     }
                     si++;
                     cmv.f[0] = s->p[i].color[0].f[k] * cm;
@@ -326,8 +326,5 @@ void DrawSmoke_Scalar(SmokeV* s,
             }
         }
     }
-    glColorPointer(4, GL_FLOAT, 0, s->seraphimColors);
-    glVertexPointer(2, GL_FLOAT, 0, s->seraphimVertices);
-    glTexCoordPointer(2, GL_FLOAT, 0, s->seraphimTextures);
-    glDrawArrays(GL_QUADS, 0, si * 4);
+    s->numQuads = si;
 }
