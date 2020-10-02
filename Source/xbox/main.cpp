@@ -53,7 +53,7 @@ static void* createTexture() {
     //auto tempTexData = new unsigned char[texture_width * texture_height * 2];
     auto texData = (unsigned char*)MmAllocateContiguousMemoryEx(pitch * height, 0, 0x03FFAFFF, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
     MakeTexture((unsigned char(*)[256][2])texData);
-    
+
     //TODO: convert to correct non-linear format
 
     return texData;
@@ -65,7 +65,7 @@ static float* alloc_vertex_colors;
 
 static void* alloc_texture;
 
-static void initShader(void) {
+static void initVertexShader(void) {
     XguTransformProgramInstruction vs_program[] = {
         #include "vshader.inl"
     };
@@ -86,24 +86,51 @@ static void initShader(void) {
     }
     
     pb_end(p);
-    
-    p = pb_begin();
-    #include "combiner.inl"
-    pb_end(p);
 }
 
+struct ColorVertex {
+    float x, y;
+    float r, g, b, a;
+};
+
+static ColorVertex* overlayVertices;
+
+void initOverlay() {
+    overlayVertices = (ColorVertex*)MmAllocateContiguousMemoryEx(sizeof(ColorVertex) * 4, 0, 0x03FFAFFF, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
+
+    float width = (float)pb_back_buffer_width();
+    float height = (float)pb_back_buffer_height();
+    float alpha = 0.083333333335f;
+    overlayVertices[0] = {-1.0f, 0.0f,          0.0f, 0.0f, 0.0f, alpha};
+    overlayVertices[1] = {-1.0f, height + 1.0f, 0.0f, 0.0f, 0.0f, alpha};
+    overlayVertices[2] = {width, height + 1.0f, 0.0f, 0.0f, 0.0f, alpha};
+    overlayVertices[3] = {width, 0.0f,          0.0f, 0.0f, 0.0f, alpha};
+}
+void destructOverlay() {
+    MmFreeContiguousMemory(overlayVertices);
+}
 void darkenBackground() {
     auto p = pb_begin();
-    //p = xgu_set_blend_func_sfactor(p, XGU_FACTOR_SRC_ALPHA);
-    //p = xgu_set_blend_func_dfactor(p, XGU_FACTOR_ONE_MINUS_SRC_ALPHA);
-
-    //TODO: darken background here
-
+    #include "color.inl"
+    p = xgu_set_blend_func_sfactor(p, XGU_FACTOR_SRC_ALPHA);
+    p = xgu_set_blend_func_dfactor(p, XGU_FACTOR_ONE_MINUS_SRC_ALPHA);
     pb_end(p);
+
+    for(int i = 0; i < XGU_ATTRIBUTE_COUNT; i++) {
+        xgux_set_attrib_pointer((XguVertexArray)i, (XguVertexArrayType)XGU_FLOAT, 0, 0, NULL);
+    }
+
+    xgux_set_attrib_pointer(XGU_VERTEX_ARRAY, (XguVertexArrayType)XGU_FLOAT, 2,  sizeof(ColorVertex), &overlayVertices[0].x);
+    xgux_set_attrib_pointer(XGU_COLOR_ARRAY,  (XguVertexArrayType)XGU_FLOAT, 4,  sizeof(ColorVertex), &overlayVertices[0].r);
+
+
+    xgux_draw_arrays(XGU_QUADS, 0, 4);
 }
 
 void drawFlurry(global_info_t* info) {
     auto p = pb_begin();
+    #include "color_texture.inl"
+    
     p = xgu_set_blend_func_sfactor(p, XGU_FACTOR_SRC_ALPHA);
     p = xgu_set_blend_func_dfactor(p, XGU_FACTOR_ONE);
     
@@ -143,13 +170,13 @@ int main(void) {
     int width = pb_back_buffer_width();
     int height = pb_back_buffer_height();
     
-    initShader();
+    initVertexShader();
     
     alloc_texture = createTexture();
     alloc_vertex_positions = (float*)MmAllocateContiguousMemoryEx(NUMSMOKEPARTICLES * sizeof(float) * 2 * 4, 0, 0x03FFAFFF, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
     alloc_vertex_texcoords = (float*)MmAllocateContiguousMemoryEx(NUMSMOKEPARTICLES * sizeof(float) * 2 * 4, 0, 0x03FFAFFF, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
     alloc_vertex_colors =    (float*)MmAllocateContiguousMemoryEx(NUMSMOKEPARTICLES * sizeof(float) * 4 * 4, 0, 0x03FFAFFF, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
-    
+    initOverlay();
     
     XguMatrix4x4 m_proj;
     mtx_identity(&m_proj);
@@ -211,8 +238,6 @@ int main(void) {
         
         p = xgu_set_transform_constant_load(p, 96);
         p = xgu_set_transform_constant(p, (XguVec4 *)&m_proj, 4);
-        XguVec4 constants =  {0, 0, 0, 0};
-        p = xgu_set_transform_constant(p, &constants, 1);
 
         pb_end(p);
 
@@ -231,6 +256,7 @@ int main(void) {
     MmFreeContiguousMemory(alloc_vertex_texcoords);
     MmFreeContiguousMemory(alloc_vertex_colors);
     MmFreeContiguousMemory(alloc_texture);
+    destructOverlay();
     
     pb_show_debug_screen();
     pb_kill();

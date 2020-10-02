@@ -4,7 +4,7 @@ GEN_XISO = $(XBE_TITLE).iso
 SRCS =  $(wildcard $(CURDIR)/*.cpp) $(wildcard $(CURDIR)/*.c) \
         $(wildcard $(CURDIR)/../core/*.cpp)
 
-SHADER_OBJS = combiner.inl vshader.inl
+SHADER_OBJS = color.inl color_texture.inl vshader.inl
 
 NXDK_DIR ?= $(CURDIR)/../../../nxdk
 NXDK_SDL = y
