@@ -6,6 +6,7 @@
 #include "Star.h"
 #include "Spark.h"
 #include "Particle.h"
+#include <math.h>
 
 double TimeInSecondsSinceStart(void) {
     static auto start = std::chrono::high_resolution_clock::now();
