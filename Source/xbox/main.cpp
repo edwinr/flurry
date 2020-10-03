@@ -45,16 +45,48 @@ static void destructFlurry(global_info_t* flurry_info) {
     }
 }
 
+static uint32_t getSwizzledX(uint32_t x) {
+    return (x & 0x00000001)
+         | ((x & 0x00000002) << 1)
+         | ((x & 0x00000004) << 2)
+         | ((x & 0x00000008) << 3)
+         | ((x & 0x00000010) << 4)
+         | ((x & 0x00000020) << 5)
+         | ((x & 0x00000040) << 6)
+         | ((x & 0x00000080) << 7)
+         | ((x & 0x00000100) << 8)
+         | ((x & 0x00000200) << 9)
+         | ((x & 0x00000400) << 10)
+         | ((x & 0x00000800) << 11)
+         | ((x & 0x00001000) << 12)
+         | ((x & 0x00002000) << 13)
+         | ((x & 0x00004000) << 14)
+         | ((x & 0x00008000) << 15);
+}
+
+static uint32_t getSwizzledY(uint32_t y) {
+    return getSwizzledX(y) << 1;
+}
+
 static void* createTexture() {
     const unsigned int width = 256;
     const unsigned int height = 256;
-    const unsigned int pitch = width * 2;
+    const unsigned int bpp = 2;
 
-    //auto tempTexData = new unsigned char[texture_width * texture_height * 2];
-    auto texData = (unsigned char*)MmAllocateContiguousMemoryEx(pitch * height, 0, 0x03FFAFFF, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
-    MakeTexture((unsigned char(*)[256][2])texData);
+    auto tempTexData = new unsigned char[width * height * 2];
+    auto texData = (unsigned char*)MmAllocateContiguousMemoryEx(width * height * bpp, 0, 0x03FFAFFF, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
+    MakeTexture((unsigned char(*)[256][2])tempTexData);
 
-    //TODO: convert to correct non-linear format
+    for (int y = 0; y < height; ++y) {
+        uint32_t srcYOffset = y * width * bpp;
+        uint32_t dstYOffset = getSwizzledY(y) * bpp;
+        for (int x = 0; x < width; ++x) {
+            int srcOffset = x * bpp + srcYOffset;
+            int dstOffset = getSwizzledX(x) * bpp + dstYOffset;
+            memcpy(texData + dstOffset, tempTexData + srcOffset, 2);
+        }
+    }
+    delete[] tempTexData;
 
     return texData;
 }
