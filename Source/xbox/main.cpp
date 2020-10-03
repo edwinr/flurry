@@ -188,24 +188,12 @@ void setInitialState() {
     int width = pb_back_buffer_width();
     int height = pb_back_buffer_height();
 
-    XguMatrix4x4 m_proj;
-    mtx_identity(&m_proj);
-    float left = 0.0f;
-    float right = width;
-    float bottom = 0.0f;
-    float top = height;
-    float near = -1000.0f;
-    float far = 1000.0f;
-    m_proj.f[0] = 2.0f / (right - left);
-    m_proj.f[5] = 2.0f / (top - bottom);
-    m_proj.f[10] = -2.0f / (far - near);
-    m_proj.f[12] = -((right + left) / (right - left));
-    m_proj.f[13] = -((top + bottom) / (top - bottom));
-    m_proj.f[14] = -((far + near) / (far - near));
-    
-    XguMatrix4x4 m_viewport;
-    mtx_viewport(&m_viewport, 0, 0, width, height, 0.0f, 0xFFFF);
-    mtx_multiply(&m_proj, m_proj, m_viewport);
+    XguMatrix4x4 m_proj = { 0.0f };
+    m_proj.f[0] = 1.0f;
+    m_proj.f[5] = -1.0f;
+    m_proj.f[10] = -65.5350037;
+    m_proj.f[13] = height;
+    m_proj.f[15] = 1.0f;
 
     auto p = pb_begin();
     p = initVertexShader(p);
