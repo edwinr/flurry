@@ -107,13 +107,7 @@ static uint32_t* initVertexShader(uint32_t* p) {
     p = xgu_set_transform_program_cxt_write_enable(p, false);
     
     p = xgu_set_transform_program_load(p, 0);
-    
-    // FIXME: wait for xgu_set_transform_program to get fixed
-    for(int i = 0; i < sizeof(vs_program)/16; i++) {
-        p = push_command(p, NV097_SET_TRANSFORM_PROGRAM, 4);
-        p = push_parameters(p, &vs_program[i].i[0], 4);
-    }
-
+    p = xgu_set_transform_program(p, vs_program, sizeof(vs_program)/16);
     return p;
 }
 
