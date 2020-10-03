@@ -97,13 +97,10 @@ static float* alloc_vertex_colors;
 
 static void* alloc_texture;
 
-static void initVertexShader(void) {
+static uint32_t* initVertexShader(uint32_t* p) {
     XguTransformProgramInstruction vs_program[] = {
         #include "vshader.inl"
     };
-    
-    uint32_t *p = pb_begin();
-    
     p = xgu_set_transform_program_start(p, 0);
     
     p = xgu_set_transform_execution_mode(p, XGU_PROGRAM, XGU_RANGE_MODE_PRIVATE);
@@ -116,8 +113,8 @@ static void initVertexShader(void) {
         p = push_command(p, NV097_SET_TRANSFORM_PROGRAM, 4);
         p = push_parameters(p, &vs_program[i].i[0], 4);
     }
-    
-    pb_end(p);
+
+    return p;
 }
 
 struct ColorVertex {
@@ -193,23 +190,10 @@ void drawFlurry(global_info_t* info) {
     }
 }
 
-int main(void) {
-    XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
-    
-    pb_init();
-    pb_show_front_screen();
-    
+void setInitialState() {
     int width = pb_back_buffer_width();
     int height = pb_back_buffer_height();
-    
-    initVertexShader();
-    
-    alloc_texture = createTexture();
-    alloc_vertex_positions = (float*)MmAllocateContiguousMemoryEx(NUMSMOKEPARTICLES * sizeof(float) * 2 * 4, 0, 0x03FFAFFF, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
-    alloc_vertex_texcoords = (float*)MmAllocateContiguousMemoryEx(NUMSMOKEPARTICLES * sizeof(float) * 2 * 4, 0, 0x03FFAFFF, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
-    alloc_vertex_colors =    (float*)MmAllocateContiguousMemoryEx(NUMSMOKEPARTICLES * sizeof(float) * 4 * 4, 0, 0x03FFAFFF, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
-    initOverlay();
-    
+
     XguMatrix4x4 m_proj;
     mtx_identity(&m_proj);
     float left = 0.0f;
@@ -228,13 +212,37 @@ int main(void) {
     XguMatrix4x4 m_viewport;
     mtx_viewport(&m_viewport, 0, 0, width, height, 0.0f, 0xFFFF);
     mtx_multiply(&m_proj, m_proj, m_viewport);
+
+    auto p = pb_begin();
+    p = initVertexShader(p);
+    p = xgu_set_cull_face_enable(p, false);
+    p = xgu_set_blend_enable(p, true);
+    p = xgu_set_depth_test_enable(p, false);
+    p = xgu_set_depth_mask(p, false);
+    p = xgu_set_transform_constant_load(p, 96);
+    p = xgu_set_transform_constant(p, (XguVec4 *)&m_proj, 4);
+    pb_end(p);
+}
+
+int main(void) {
+    XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
+    
+    pb_init();
+    pb_show_front_screen();
+    
+    
+    alloc_texture = createTexture();
+    alloc_vertex_positions = (float*)MmAllocateContiguousMemoryEx(NUMSMOKEPARTICLES * sizeof(float) * 2 * 4, 0, 0x03FFAFFF, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
+    alloc_vertex_texcoords = (float*)MmAllocateContiguousMemoryEx(NUMSMOKEPARTICLES * sizeof(float) * 2 * 4, 0, 0x03FFAFFF, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
+    alloc_vertex_colors =    (float*)MmAllocateContiguousMemoryEx(NUMSMOKEPARTICLES * sizeof(float) * 4 * 4, 0, 0x03FFAFFF, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
+    initOverlay();
     
     input_init();
     
     auto info = std::make_unique<global_info_t>();
     initFlurry(info.get());
     GLSetupRC(info.get());
-    GLResize(info.get(), width, height);
+    GLResize(info.get(), pb_back_buffer_width(), pb_back_buffer_height());
 
     for (int i = 0; i < 2; ++i) {
         pb_reset();
@@ -250,6 +258,8 @@ int main(void) {
         while (pb_finished());
     }
 
+    setInitialState();
+
     while(1) {
         input_poll();
         
@@ -261,17 +271,6 @@ int main(void) {
         pb_target_back_buffer();
         
         while(pb_busy());
-        
-        uint32_t *p = pb_begin();
-        p = xgu_set_cull_face_enable(p, false);
-        p = xgu_set_blend_enable(p, true);
-        p = xgu_set_depth_test_enable(p, false);
-        p = xgu_set_depth_mask(p, false);
-        
-        p = xgu_set_transform_constant_load(p, 96);
-        p = xgu_set_transform_constant(p, (XguVec4 *)&m_proj, 4);
-
-        pb_end(p);
 
         darkenBackground();
 
