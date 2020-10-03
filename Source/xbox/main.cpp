@@ -2,7 +2,6 @@
 #include <xgu/xgu.h>
 #include <xgu/xgux.h>
 #include <memory>
-#include "math.h"
 #include "input.h"
 
 #include "../core/Gl_saver.h"
