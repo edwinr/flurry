@@ -70,7 +70,7 @@ void UpdateSmoke_ScalarBase(SmokeV* s,
                 s->p[s->nextParticle].oldposition[1].f[s->nextSubParticle] = sy;
                 s->p[s->nextParticle].oldposition[2].f[s->nextSubParticle] = sz;
                 streamSpeedCoherenceFactor =
-                    max(0.0f, 1.0f + RandBell(0.25f * incohesion));
+                    std::max(0.0f, 1.0f + RandBell(0.25f * incohesion));
                 dx = s->p[s->nextParticle].position[0].f[s->nextSubParticle] -
                      sparks[i]->position[0];
                 dy = s->p[s->nextParticle].position[1].f[s->nextSubParticle] -
@@ -235,7 +235,7 @@ void PrepareSmokeVertices_Scalar(SmokeV* s,
                 continue;
             }
 
-            w = max(1.0f, thisWidth / z);
+            w = std::max(1.0f, thisWidth / z);
             {
                 float oldx = s->p[i].oldposition[0].f[k];
                 float oldy = s->p[i].oldposition[1].f[k];
@@ -252,7 +252,7 @@ void PrepareSmokeVertices_Scalar(SmokeV* s,
                 } else {
                     sm = 0.0f;
                 }
-                ow = max(1.0f, thisWidth / oldz);
+                ow = std::max(1.0f, thisWidth / oldz);
                 if (d) {
                     os = ow / d;
                 } else {

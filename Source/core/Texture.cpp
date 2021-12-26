@@ -50,13 +50,13 @@ static void SpeckleTexture(unsigned char smallTextureArray[32][32]) {
         for (j = 2; j < 30; j++) {
             speck = 1;
             while (speck <= 32 && rand() % 2) {
-                t = (float)min(255, smallTextureArray[i][j] + speck);
+                t = (float)std::min(255, smallTextureArray[i][j] + speck);
                 smallTextureArray[i][j] = (unsigned char)t;
                 speck += speck;
             }
             speck = 1;
             while (speck <= 32 && rand() % 2) {
-                t = (float)max(0, smallTextureArray[i][j] - speck);
+                t = (float)std::max(0, smallTextureArray[i][j] - speck);
                 smallTextureArray[i][j] = (unsigned char)t;
                 speck += speck;
             }
@@ -92,10 +92,10 @@ static void MakeSmallTexture(unsigned char smallTextureArray[32][32]) {
                 } else {
                     t = 255.0f * (float)cos(r * M_PI / 31.0);
                 }
-                smallTextureArray[i][j] = (unsigned char)min(
+                smallTextureArray[i][j] = (unsigned char)std::min(
                     255,
-                    (t + smallTextureArray[i][j] + smallTextureArray[i][j]) /
-                        3);
+                    (int)((t + smallTextureArray[i][j] + smallTextureArray[i][j]) /
+                        3));
             }
         }
     }
@@ -126,7 +126,7 @@ static void AverageLastAndFirstTextures(
     for (i = 0; i < 32; i++) {
         for (j = 0; j < 32; j++) {
             t = (smallTextureArray[i][j] + bigTextureArray[i][j][0]) / 2;
-            smallTextureArray[i][j] = (unsigned char)min(255, t);
+            smallTextureArray[i][j] = (unsigned char)std::min(255, t);
         }
     }
 }
