@@ -56,13 +56,19 @@ void GLSetupRC(global_info_t* info) {
 // Render the OpenGL Scene here. Called by the WM_PAINT message
 // handler.
 void GLRenderScene(global_info_t* info) {
+    auto time = TimeInSecondsSinceStart() + info->flurryRandomSeed;
+    auto deltaTime = time - info->fTime;
+    GLRenderScene(info, time, deltaTime);
+}
+
+void GLRenderScene(global_info_t* info, double time, double deltaTime) {
     int i;
 
     info->dframe++;
 
     info->fOldTime = info->fTime;
-    info->fTime = TimeInSecondsSinceStart() + info->flurryRandomSeed;
-    info->fDeltaTime = info->fTime - info->fOldTime;
+    info->fTime = time;
+    info->fDeltaTime = deltaTime;
 
     info->drag = (float)pow(0.9965, info->fDeltaTime * 85.0);
 

@@ -75,6 +75,7 @@ double TimeInSecondsSinceStart();
 
 void GLSetupRC(global_info_t* info);
 void GLRenderScene(global_info_t* info);
+void GLRenderScene(global_info_t* info, double time, double deltaTime);
 void GLResize(global_info_t* info, float w, float h);
 
 #endif  // Include/Define

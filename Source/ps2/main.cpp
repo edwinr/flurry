@@ -187,8 +187,10 @@ int renderLoop(global_info_t& flurryInfo, FlurryRenderData& renderData) {
     dma_wait_fast();
 
     int context = 0;
+    double time = flurryInfo.flurryRandomSeed;
     for (;;) {
-        GLRenderScene(&flurryInfo);
+        GLRenderScene(&flurryInfo, time, 1.0 / 60.0);
+        time += 1.0 / 60.0;
         renderData.prepareVertexData(&flurryInfo, projectionMatrix);
 
         current = packets[context];
