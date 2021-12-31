@@ -1,4 +1,5 @@
 #include "../core/Gl_saver.h"
+#include "../core/Texture.h"
 
 #include <memory>
 #include <cstdlib>
@@ -30,11 +31,64 @@ static xyz_t convertXyz(VECTOR v) {
 }
 
 struct FlurryRenderData {
-    VECTOR sourcePositions[NUMSMOKEPARTICLES * 4];
-    VECTOR transformedPositions[NUMSMOKEPARTICLES * 4];
-    xyz_t convertedPositions[NUMSMOKEPARTICLES * 4];
-    float* sourceColors;
-    int numVertices;
+    texbuffer_t texbuf;
+
+    void loadTexture() {
+        const int width = 256;
+        const int height = 256;
+
+        auto tempTexData1 = new unsigned char[width * height * 2];
+        MakeTexture((unsigned char(*)[width][2])tempTexData1);
+        auto tempTexData2 = new unsigned char[width * height * 4];
+        for (int i=0; i<width*height; ++i) {
+            auto s = &tempTexData1[i * 2];
+            auto d = &tempTexData2[i * 4];
+            d[0] = d[1] = d[2] = s[0];
+            d[3] = s[1];
+        }
+        delete[] tempTexData1;
+
+        texbuf.width = width;
+        texbuf.psm = GS_PSM_32;
+        texbuf.info.width = draw_log2(width);
+        texbuf.info.height = draw_log2(height);
+        texbuf.info.components = TEXTURE_COMPONENTS_RGBA;
+        texbuf.info.function = TEXTURE_FUNCTION_MODULATE;
+        texbuf.address =
+            graph_vram_allocate(width, height, GS_PSM_32, GRAPH_ALIGN_BLOCK);
+
+        auto packet = packet_init(50, PACKET_NORMAL);
+        auto q = packet->data;
+        q = draw_texture_transfer(q, tempTexData2, width, height, GS_PSM_32,
+                                  texbuf.address, texbuf.width);
+        q = draw_texture_flush(q);
+        dma_channel_send_chain(DMA_CHANNEL_GIF, packet->data, q - packet->data,
+                               0, 0);
+        dma_wait_fast();
+
+        delete[] tempTexData2;
+        packet_free(packet);
+    }
+
+    qword_t* bindTexture(qword_t* q) {
+        lod_t lod = {0};
+        lod.calculation = LOD_USE_K;
+        lod.mag_filter = LOD_MAG_LINEAR;
+        lod.min_filter = LOD_MIN_LINEAR;
+        lod.max_level = 0;
+        lod.l = 0;
+        lod.k = 0;
+        q = draw_texture_sampling(q, 0, &lod);
+
+        clutbuffer_t clut = {0};
+        q = draw_texturebuffer(q, 0, &texbuf, &clut);
+
+        texwrap_t wrap = {0};
+        wrap.horizontal = WRAP_REPEAT;
+        wrap.vertical = WRAP_REPEAT;
+        q = draw_texture_wrapping(q, 0, &wrap);
+        return q;
+    }
 
     qword_t* setFlurryBlendMode(qword_t* q) {
         // this blend equation is not like on PC:
@@ -50,39 +104,14 @@ struct FlurryRenderData {
         return q;
     }
 
-    void prepareVertexData(global_info_t* info, MATRIX projectionMatrix) {
-        //auto sourceVertices = &(reinterpret_cast<float*>(&info->s->seraphimVertices))[i * 2 * 4];
-        //auto sourceTexCoords = &info->s->seraphimTextures[sourceOffset];
-        sourceColors = (float*)&info->s->seraphimColors;
-        
-        numVertices = info->s->numQuads * 4;
-        if (numVertices > 0) {
-            auto s = (float*)&info->s->seraphimVertices;
-
-            for (int i = 0; i < numVertices; i++) {
-                sourcePositions[i][0] = s[0];
-                sourcePositions[i][1] = s[1];
-                sourcePositions[i][2] = 0.0f;
-                sourcePositions[i][3] = 0.0f;
-
-                vector_apply(transformedPositions[i], sourcePositions[i],
-                             projectionMatrix);
-                s += 2;
-            }
-            
-            for (int i = 0; i < numVertices; ++i) {
-                convertedPositions[i] = convertXyz(transformedPositions[i]);
-            }
-        }
-    }
-
-    qword_t* render(qword_t* q) {
+    qword_t* render(qword_t* q, global_info_t& flurryInfo, MATRIX projectionMatrix) {
         q = setFlurryBlendMode(q);
+        q = bindTexture(q);
 
         prim_t prim;
         prim.type = PRIM_TRIANGLE;
         prim.shading = PRIM_SHADE_GOURAUD;
-        prim.mapping = DRAW_DISABLE;
+        prim.mapping = DRAW_ENABLE;
         prim.fogging = DRAW_DISABLE;
         prim.blending = DRAW_ENABLE;
         prim.antialiasing = DRAW_DISABLE;
@@ -96,29 +125,52 @@ struct FlurryRenderData {
         color.a = 0xff;
         color.q = 1.0f;
         q = draw_prim_start(q, 0, &prim, &color);
-        for (int i = 0; i < numVertices / 4; i++) {
-            color_t convertedColors[4];
-            draw_convert_rgbaq(convertedColors, 4, (vertex_f_t*)&transformedPositions[i * 4], (color_f_t*)&sourceColors[i * 4 * 4]);
+        auto dw = (u64*)q;
+        
+        for (int i = 0; i < flurryInfo.s->numQuads; i++) {
+            auto quadPositions = &((float*)&flurryInfo.s->seraphimVertices)[i * 8];
+            VECTOR transformedPositions[4];
+            xyz_t convertedPositions[4];
+            for (int j = 0; j< 4; j++) {
+                VECTOR position = {quadPositions[j * 2], quadPositions[j * 2 + 1], 0.0f, 1.0f};
+                vector_apply(transformedPositions[j], position,
+                             projectionMatrix);
+                convertedPositions[j] = convertXyz(transformedPositions[j]);
+            }
 
-            const int indices[] = {0, 1, 2, 0, 2, 3};
+            color_t convertedColors[4];
+            draw_convert_rgbaq(convertedColors, 4, (vertex_f_t*)&transformedPositions, (color_f_t*)&((float*)&flurryInfo.s->seraphimColors)[i * 4 * 4]);
+            
+            VECTOR texCoords[] = {{flurryInfo.s->seraphimTextures[i * 8 + 0], flurryInfo.s->seraphimTextures[i * 8 + 1], 0, 0},
+                                  {flurryInfo.s->seraphimTextures[i * 8 + 2], flurryInfo.s->seraphimTextures[i * 8 + 3], 0, 0},
+                                  {flurryInfo.s->seraphimTextures[i * 8 + 4], flurryInfo.s->seraphimTextures[i * 8 + 5], 0, 0},
+                                  {flurryInfo.s->seraphimTextures[i * 8 + 6], flurryInfo.s->seraphimTextures[i * 8 + 7], 0, 0}};
+            texel_t convertedTexCoords[4];
+            draw_convert_st(convertedTexCoords, 4, (vertex_f_t*)&transformedPositions, (texel_f_t*)texCoords);
+
+
+            const int indices[] = {0, 2, 1, 0, 3, 2};
             for (int j=0; j<6; ++j) {
-                q->dw[0] = convertedColors[indices[j]].rgbaq;
-                q->dw[1] = convertedPositions[i * 4 + indices[j]].xyz;
-                q++;
+                auto index = indices[j];
+                *dw++ = convertedColors[index].rgbaq;
+			    *dw++ = convertedTexCoords[index].uv;
+                *dw++ = convertedPositions[index].xyz;
             }
         }
 
-        q = draw_prim_end(q, 2, DRAW_RGBAQ_REGLIST);
+        if ((u32)dw % 16) {
+            *dw++ = 0;
+        }
+
+        q = (qword_t*)dw;
+        q = draw_prim_end(q, 3, DRAW_STQ_REGLIST);
         return q;
     }
 };
 
 static qword_t* darkenBackground(qword_t* q) {
     const float alpha = 0.083333333335f;
-    // VECTOR colors[] = {{1.0f, 0.0f, 0.0f, alpha},
-    //                    {0.0f, 1.0f, 0.0f, alpha},
-    //                    {0.0f, 0.0f, 1.0f, alpha},
-    //                    {0.0f, 1.0f, 1.0f, alpha}};
+    
     VECTOR colors[] = {{0.0f, 0.0f, 0.0f, alpha},
                        {0.0f, 0.0f, 0.0f, alpha},
                        {0.0f, 0.0f, 0.0f, alpha},
@@ -126,14 +178,15 @@ static qword_t* darkenBackground(qword_t* q) {
     VECTOR positions[] = {{0, 0, 0, 1},
                           {2, 0, 0, 1},
                           {2, 2, 0, 1},
-                          {0, 0, 0, 1}};
+                          {0, 2, 0, 1}};
+
     xyz_t convertedPositions[4];
     color_t convertedColors[4];
 
-    for (int i=0; i<3; ++i) {
+    for (int i=0; i<4; ++i) {
         convertedPositions[i] = convertXyz(positions[i]);
     }
-    draw_convert_rgbaq(convertedColors, 3, (vertex_f_t*)positions, (color_f_t*)colors);
+    draw_convert_rgbaq(convertedColors, 4, (vertex_f_t*)positions, (color_f_t*)colors);
 
     blend_t blend;
     blend.color1 = BLEND_COLOR_SOURCE;
@@ -191,7 +244,6 @@ int renderLoop(global_info_t& flurryInfo, FlurryRenderData& renderData) {
     for (;;) {
         GLRenderScene(&flurryInfo, time, 1.0 / 60.0);
         time += 1.0 / 60.0;
-        renderData.prepareVertexData(&flurryInfo, projectionMatrix);
 
         current = packets[context];
         
@@ -200,7 +252,7 @@ int renderLoop(global_info_t& flurryInfo, FlurryRenderData& renderData) {
         q++;
 
         q = darkenBackground(q);
-        q = renderData.render(q);
+        q = renderData.render(q, flurryInfo, projectionMatrix);
         q = draw_finish(q);
 
         DMATAG_END(dmatag, (q - current->data) - 1, 0, 0, 0);
@@ -269,6 +321,7 @@ int main(int argc, char** argv) {
 
     graph_initialize(frame.address, frame.width, frame.height, frame.psm, 0, 0);
 
+    renderData->loadTexture();
     packet_t* packet = packet_init(16, PACKET_NORMAL);
     qword_t* q = packet->data;
     q = draw_setup_environment(q, 0, &frame, &z);
