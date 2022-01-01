@@ -27,10 +27,10 @@ int main(int argc, char** argv) {
     GLResize(flurryInfo.get(), screenWidth, screenHeight);
 
 
-	dma_channel_initialize(DMA_CHANNEL_GIF,NULL,0);
-	dma_channel_fast_waits(DMA_CHANNEL_GIF);
+    dma_channel_initialize(DMA_CHANNEL_GIF,NULL,0);
+    dma_channel_fast_waits(DMA_CHANNEL_GIF);
 
-	framebuffer_t frame = {0};
+    framebuffer_t frame = {0};
     frame.width = screenWidth;
     frame.height = screenHeight;
     frame.psm = GS_PSM_32;
@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
                                         GRAPH_ALIGN_PAGE);
 
     // No zbuffer
-	zbuffer_t z = {0};
+    zbuffer_t z = {0};
 
     graph_initialize(frame.address, frame.width, frame.height, frame.psm, 0, 0);
 
@@ -99,9 +99,9 @@ int renderLoop(global_info_t& flurryInfo, FlurryRenderer& renderData) {
     }
 
     packet_free(packets[0]);
-	packet_free(packets[1]);
+    packet_free(packets[1]);
 
-	return 0;
+    return 0;
 }
 
 static void setProjectionMatrix(MATRIX projectionMatrix) {
