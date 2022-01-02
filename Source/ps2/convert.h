@@ -4,10 +4,16 @@
 #include <math3d.h>
 #include <draw_types.h>
 
+//#define FLURRY_PS2_720P
+#ifdef FLURRY_PS2_720P
+const int screenWidth = 1280;
+const int screenHeight = 720;
+#else
 const int screenWidth = 640;
 const int screenHeight = 512;
-const float screenScaleX = 1.25f;
-const float screenScaleY = 1.0f;
+#endif
+const float screenScaleX = screenWidth / 512.0f;
+const float screenScaleY = screenHeight / 512.0f;
 
 inline static xyz_t convertXyz(VECTOR v) {
     const unsigned int maxZ = 1 << 31;

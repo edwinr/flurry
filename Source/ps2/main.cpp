@@ -40,7 +40,15 @@ int main(int argc, char** argv) {
     // No zbuffer
     zbuffer_t z = {0};
 
+#ifdef FLURRY_PS2_720P
+    graph_set_mode(GRAPH_MODE_NONINTERLACED, GRAPH_MODE_HDTV_720P, 0, GRAPH_DISABLE);
+    graph_set_screen(-128, -16, screenWidth, screenHeight);
+    graph_set_bgcolor(0, 0, 0);
+    graph_set_framebuffer_filtered(frame.address, frame.width, frame.psm, 0, 0);
+    graph_enable_output();
+#else
     graph_initialize(frame.address, frame.width, frame.height, frame.psm, 0, 0);
+#endif
 
     renderData->loadTexture();
     packet_t* packet = packet_init(16, PACKET_NORMAL);
