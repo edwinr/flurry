@@ -44,7 +44,7 @@ int FlurryRenderer::init() {
     }
 
     vertexBuffer =
-        (Vertex*)rsxMemalign(128, NUMSMOKEPARTICLES * sizeof(Vertex) * 40);
+        (Vertex*)rsxMemalign(128, NUMSMOKEPARTICLES * sizeof(Vertex) * 4);
     rsxAddressToOffset(vertexBuffer, &vertexBufferOffset);
 
     // vertex shader
