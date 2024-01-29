@@ -1,0 +1,15 @@
+void main(
+    float2 texcoord : TEXCOORD0,
+    float4 vertexColor : COLOR0,
+    
+    uniform sampler2D texture,
+    
+    out float4 oColor
+) {
+    float4 color = tex2D(texture,texcoord);
+    color *= vertexColor;
+
+    //TODO: use color from texture
+    //oColor = color;
+    oColor = vertexColor;
+}

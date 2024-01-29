@@ -7,6 +7,7 @@
 #include "Spark.h"
 #include "Star.h"
 #include <cmath>
+#include <algorithm>
 
 #define MAXANGLES 16384
 #define NOT_QUITE_DEAD 3

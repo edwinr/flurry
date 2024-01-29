@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "PS3-PPU",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/local/ps3dev/ppu/include",
+                "/usr/local/ps3dev/ppu/include/simdmath"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/local/ps3dev/ppu/bin/powerpc64-ps3-elf-gcc",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerArgs": []
+        }
+    ],
+    "version": 4
+}

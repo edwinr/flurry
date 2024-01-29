@@ -1,0 +1,18 @@
+void main(
+    float2 vertexPosition : POSITION,
+    float2 vertexTexcoord : TEXCOORD0,
+    float4 vertexColor : COLOR0,
+    
+    out float4 ePosition : POSITION,
+    out float2 oTexcoord : TEXCOORD0,
+    out float4 oColor : COLOR0
+) {
+    //TODO: use uniform for this
+    float2 scale = 2.0 / float2(1920.0, -1080.0);
+    float2 offset = float2(-0.5, 0.5);
+    
+    ePosition = float4(vertexPosition * scale + offset, 0.0f, 1.0f);
+
+    oColor = vertexColor;
+    oTexcoord = vertexTexcoord;
+}

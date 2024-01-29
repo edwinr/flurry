@@ -11,6 +11,7 @@
 #include "PTypes.h"
 
 #include <stdlib.h>
+#include <algorithm>
 
 #define _USE_MATH_DEFINES // for M_PI
 #include <math.h>
