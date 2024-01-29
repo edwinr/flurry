@@ -14,6 +14,7 @@ class FlurryRenderer {
     Vertex* vertexBuffer;
     uint32_t vertexBufferOffset;
     void* vertexProgramUCode;
+    rsxProgramConst *scaleProgramConst;
     void* fragmentProgramBuffer;
     void* fragmentProgramUCode;
     uint32_t fragmentProgramOffset;

@@ -51,6 +51,8 @@ int FlurryRenderer::init() {
     uint32_t vertexProgramSize = 0;
     rsxVertexProgramGetUCode((rsxVertexProgram*)particles_vpo,
                              &vertexProgramUCode, &vertexProgramSize);
+    scaleProgramConst =
+        rsxVertexProgramGetConst((rsxVertexProgram*)particles_vpo, "scale");
 
     // fragment shader
     uint32_t fragmentProgramSize = 0;
@@ -87,6 +89,9 @@ void FlurryRenderer::draw(gcmContextData* context,
 
     rsxLoadVertexProgram(context, (rsxVertexProgram*)particles_vpo,
                          vertexProgramUCode);
+    float scale[] = {2.0f / (float)displayWidth, -2.0f / (float)displayHeight};
+    rsxSetVertexProgramParameter(context, (rsxVertexProgram*)particles_vpo,
+                                 scaleProgramConst, scale);
     rsxLoadFragmentProgramLocation(context, (rsxFragmentProgram*)particles_fpo,
                                    fragmentProgramOffset, GCM_LOCATION_RSX);
 
