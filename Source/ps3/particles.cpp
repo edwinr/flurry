@@ -81,6 +81,8 @@ void FlurryRenderer::draw(gcmContextData* context,
     rsxLoadFragmentProgramLocation(context, (rsxFragmentProgram*)particles_fpo,
                                    fragmentProgramOffset, GCM_LOCATION_RSX);
 
+    rsxSetBlendFunc(context, GCM_SRC_ALPHA, GCM_ONE, GCM_SRC_ALPHA, GCM_ONE);
+
     if (flurry->s->numQuads > 0) {
         rsxDrawVertexArray(context, GCM_TYPE_QUADS, 0, flurry->s->numQuads * 4);
     }

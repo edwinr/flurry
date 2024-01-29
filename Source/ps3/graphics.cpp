@@ -170,6 +170,9 @@ void Graphics::beginFrame() {
                      GCM_TEXTURE_CONVOLUTION_QUINCUNX);
     rsxTextureWrapMode(context, 0, GCM_TEXTURE_REPEAT, GCM_TEXTURE_REPEAT,
                        GCM_TEXTURE_REPEAT, 0, GCM_TEXTURE_ZFUNC_LESS, 0);
+
+    rsxSetBlendEquation(context, GCM_FUNC_ADD, GCM_FUNC_ADD);
+    rsxSetBlendEnable(context, GCM_TRUE);
 }
 
 void Graphics::endFrame() {
