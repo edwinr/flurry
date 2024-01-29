@@ -26,12 +26,21 @@ void FlurryRenderer::updateVertices(global_info_t* info) {
 }
 
 int FlurryRenderer::init() {
-    auto tempTexture = new uint8_t[256 * 256 * 4];
+    auto textureLuminanceAlpha = new uint8_t[256 * 256 * 2];
+    MakeTexture((unsigned char(*)[256][2])textureLuminanceAlpha);
+    uint8_t* textureRGBA = new uint8_t[256*256*4];
     for (int i = 0; i < 256 * 256; ++i) {
+        textureRGBA[i * 4] = textureLuminanceAlpha[i * 2];
+        textureRGBA[i * 4 + 1] = textureLuminanceAlpha[i * 2];
+        textureRGBA[i * 4 + 2] = textureLuminanceAlpha[i * 2];
+        textureRGBA[i * 4 + 3] = textureLuminanceAlpha[i * 2 + 1];
     }
-    texture.init(256, 256, tempTexture);
+    texture.init(256, 256, textureRGBA);
+    delete[] textureLuminanceAlpha;
+    delete[] textureRGBA;
     if (!texture) {
         printf("Failed to create texture\n");
+        return -1;
     }
 
     vertexBuffer =
