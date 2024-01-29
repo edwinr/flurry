@@ -9,7 +9,7 @@ void main(
 ) {
     //TODO: use uniform for this
     float2 scale = 2.0 / float2(1920.0, -1080.0);
-    float2 offset = float2(-0.5, 0.5);
+    float2 offset = float2(-1.0, 1.0);
     
     ePosition = float4(vertexPosition * scale + offset, 0.0f, 1.0f);
 
