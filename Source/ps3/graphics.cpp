@@ -153,10 +153,6 @@ void Graphics::beginFrame() {
     rsxSetShadeModel(context, GCM_SHADE_MODEL_SMOOTH);
     rsxSetFrontFace(context, GCM_FRONTFACE_CW);
 
-    rsxSetClearColor(context, 0);
-    rsxClearSurface(context,
-                    GCM_CLEAR_R | GCM_CLEAR_G | GCM_CLEAR_B | GCM_CLEAR_A);
-
     rsxSetZMinMaxControl(context, 0, 1, 1);
 
     rsxSetUserClipPlaneControl(

@@ -1,0 +1,6 @@
+void main(
+    float2 vertexPosition : POSITION,
+    out float4 ePosition : POSITION
+) {
+    ePosition = float4(vertexPosition, 0.0f, 1.0f);
+}

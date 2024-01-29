@@ -3,8 +3,9 @@
 #include <sysutil/sysutil.h>
 #include <memory>
 #include "../core/Gl_saver.h"
-#include "Graphics.h"
+#include "graphics.h"
 #include "particles.h"
+#include "fade.h"
 
 SYS_PROCESS_PARAM(1001, 0x100000);
 
@@ -22,6 +23,7 @@ int main(int argc, const char* argv[]) {
     }
 
     FlurryRenderer particles;
+    FadeRenderer fade;
     if (particles.init()) {
         printf("FlurryRenderer::init failed\n");
     }
@@ -40,8 +42,10 @@ int main(int argc, const char* argv[]) {
             break;
         }
 
-        graphics.beginFrame();
         GLRenderScene(info.get());  // update the simulation
+
+        graphics.beginFrame();
+        fade.draw(graphics.context);
         particles.draw(graphics.context, info.get(), graphics.displayWidth,
                        graphics.displayHeight);
         graphics.endFrame();
