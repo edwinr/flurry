@@ -220,6 +220,10 @@ void UpdateSpark(Spark* s,
     s->position[1] = (float)tmpY4 + RandBell(5.0f * fieldCoherence);
     s->position[2] = (float)tmpZ4 + RandBell(5.0f * fieldCoherence);
 
+    if (fDeltaTime <= 0.0) {
+        return;
+    }
+
     for (i = 0; i < 3; i++) {
         s->delta[i] = (s->position[i] - old[i]) / fDeltaTime;
     }

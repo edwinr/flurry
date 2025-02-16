@@ -272,6 +272,13 @@ void PrepareSmokeVertices_Scalar(SmokeV* s,
                     float dxm = dx * m;
                     float dym = dy * m;
 
+
+#ifdef FLURRY_TINY_TEXTURES
+                    u0 = 0.0f;
+                    v0 = 0.0f;
+                    u1 = 1.0f;
+                    v1 = 1.0f;
+#else
                     s->p[i].animFrame.i[k]++;
                     if (s->p[i].animFrame.i[k] >= 64) {
                         s->p[i].animFrame.i[k] = 0;
@@ -281,6 +288,7 @@ void PrepareSmokeVertices_Scalar(SmokeV* s,
                     v0 = (s->p[i].animFrame.i[k] >> 3) * 0.125f;
                     u1 = u0 + 0.125f;
                     v1 = v0 + 0.125f;
+#endif
                     cm = (1.375f - thisWidth / width);
                     if (s->p[i].dead.i[k] == 3) {
                         cm *= 0.125f;

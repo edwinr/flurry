@@ -27,8 +27,59 @@ GLuint FlurryOpenGL::createGLTexture() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                     GL_LINEAR_MIPMAP_NEAREST);
 
-    gluBuild2DMipmaps(GL_TEXTURE_2D, 2, 256, 256, GL_LUMINANCE_ALPHA,
+    int width = 256, height = 256;
+#ifdef FLURRY_TINY_TEXTURES
+    width = 32;
+    height = 32;
+    int writeIndex = 0;
+
+    
+    for (int y = 0; y < 32; y++) {
+        for (int x = 0; x < 32; x++) {
+            int index = (y * 256 + x) * 2;
+            bigTextureArray[writeIndex] = bigTextureArray[index] / 2;
+            bigTextureArray[writeIndex + 1] = bigTextureArray[index + 1];
+            writeIndex += 2;
+        }
+    }
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, width, height, 0,
+                 GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, bigTextureArray);
+
+    int level = 1;
+    while (width > 1 && height > 1) {
+        int levelOffset = writeIndex;
+
+        for (int y = 0; y < width; y += 2) {
+            for (int x = 0; x < width; x += 2) {
+                int offset = (y * height + x) * 2;
+                int luminance = bigTextureArray[offset] +
+                                bigTextureArray[offset + 2] +
+                                bigTextureArray[offset + width * 2] +
+                                bigTextureArray[offset + width * 2 + 2];
+                int alpha = bigTextureArray[offset + 1] +
+                            bigTextureArray[offset + 3] +
+                            bigTextureArray[offset + width * 2 + 1] +
+                            bigTextureArray[offset + width * 2 + 3];
+
+                bigTextureArray[writeIndex++] = luminance / 4;
+                bigTextureArray[writeIndex++] = alpha / 4;
+            }
+        }
+
+        width /= 2;
+        height /= 2;
+
+        glTexImage2D(GL_TEXTURE_2D, level, GL_LUMINANCE_ALPHA, width, height, 0,
+                     GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
+                     &bigTextureArray[levelOffset]);
+        level++;
+    }
+
+#else
+    gluBuild2DMipmaps(GL_TEXTURE_2D, 2, width, height, GL_LUMINANCE_ALPHA,
                       GL_UNSIGNED_BYTE, bigTextureArray);
+#endif
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     delete[] bigTextureArray;
 
@@ -54,7 +105,7 @@ void FlurryOpenGL::init(int width, int height) {
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, width, 0, height, 0.0, 1.0);
+    glOrtho(0, width, 0, height, -100.0, 100.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
@@ -73,7 +124,7 @@ void FlurryOpenGL::resize(int width, int height) {
     glViewport(0.0, 0.0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, width, 0, height, 0.0, 1.0);
+    glOrtho(0, width, 0, height, -100.0, 100.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }

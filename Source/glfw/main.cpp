@@ -6,7 +6,7 @@
 
 #include "../opengl/FlurryOpenGL.h"
 
-static void initFlurry(global_info_t* flurry_info) {
+static void initFlurry(global_info_t* flurry_info, int width, int height) {
     flurry_info->flurryRandomSeed = RandFlt(0.0, 300.0);
 
     flurry_info->numStreams = 5;
@@ -28,6 +28,10 @@ static void initFlurry(global_info_t* flurry_info) {
         flurry_info->spark[i] = new Spark;
         InitSpark(flurry_info->spark[i]);
     }
+
+    for (int i = 0; i < numParticles; i++) {
+        InitParticle(flurry_info->p[i], width, height);
+    }
 }
 
 static void destructFlurry(global_info_t* flurry_info) {
@@ -47,13 +51,14 @@ int main() {
 
     GLFWwindow* window = glfwCreateWindow(800, 600, "Flurry", nullptr, nullptr);
     glfwMakeContextCurrent(window);
+    glfwSwapInterval(1);
 
+    int width = 800, height = 600;
     auto info = std::make_unique<global_info_t>();
-    initFlurry(info.get());
+    initFlurry(info.get(), width, height);
 
     FlurryOpenGL flurryOpenGL;
 
-    int width = 800, height = 600;
     flurryOpenGL.init(width, height);
     GLSetupRC(info.get());
 

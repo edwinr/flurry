@@ -1,0 +1,5 @@
+{
+  "imageName": "ghcr.io/dragonminded/libdragon:trunk",
+  "vendorDirectory": "Source/n64-libdragon-gl/libdragon",
+  "vendorStrategy": "submodule"
+}
