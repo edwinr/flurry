@@ -139,6 +139,12 @@ void FlurryOpenGL::drawFlurryParticles(int numPrimitives,
                                        void* positionPtr,
                                        void* colorPtr,
                                        void* texcoordPtr) {
+    float* colors = (float*)colorPtr;
+    for (int i = 0; i < numPrimitives * 4 * 4; ++i) {
+        if (colors[i] < 0.0f) {
+            colors[i] = 0.0f;
+        }
+    }
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     glEnable(GL_TEXTURE_2D);
     glColorPointer(4, GL_FLOAT, 0, colorPtr);
