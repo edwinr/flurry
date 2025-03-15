@@ -1,0 +1,15 @@
+{
+    "name": "n64",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/src,type=bind,consistency=cached",
+	"workspaceFolder": "/src",
+    "build": {
+		"dockerfile": "Dockerfile"
+	},
+    "customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-vscode.cpptools"
+			]
+		}
+	}
+}
