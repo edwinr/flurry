@@ -15,4 +15,6 @@ add_library(flurry_core
 	Std.h
 	Texture.cpp
 	Texture.h
+	Default.cpp
+	Default.h
 )

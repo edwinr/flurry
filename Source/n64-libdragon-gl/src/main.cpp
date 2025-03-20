@@ -1,5 +1,6 @@
 #include "../../core/Gl_saver.h"
 #include "../../core/Texture.h"
+#include "../../core/Default.h"
 #include "../../opengl/FlurryOpenGL.h"
 
 #include <libdragon.h>
@@ -8,34 +9,6 @@
 #include <GL/gl_integration.h>
 
 #include <memory>
-
-static void initFlurry(global_info_t* flurry_info, int width, int height) {
-    flurry_info->flurryRandomSeed = RandFlt(0.0, 300.0);
-
-    flurry_info->numStreams = 5;
-    flurry_info->streamExpansion = 100;
-    flurry_info->currentColorMode = tiedyeColorMode;
-
-    for (int i = 0; i < MAXNUMPARTICLES; i++) {
-        flurry_info->p[i] = new Particle;
-    }
-
-    flurry_info->s = new SmokeV;
-    InitSmoke(flurry_info->s);
-
-    flurry_info->star = new Star;
-    InitStar(flurry_info->star);
-    flurry_info->star->rotSpeed = 1.0;
-
-    for (int i = 0; i < 64; i++) {
-        flurry_info->spark[i] = new Spark;
-        InitSpark(flurry_info->spark[i]);
-    }
-
-    for (int i = 0; i < numParticles; i++) {
-        InitParticle(flurry_info->p[i], width, height);
-    }
-}
 
 int main(void)
 {
@@ -46,7 +19,7 @@ int main(void)
     
     auto info = std::make_unique<global_info_t>();
     int width = display_get_width(), height = display_get_height();
-    initFlurry(info.get(), width, height);
+    initDefaultFlurry(info.get(), width, height);
     GLSetupRC(info.get());
 
 	rdpq_attach_clear(display_get(), nullptr);
