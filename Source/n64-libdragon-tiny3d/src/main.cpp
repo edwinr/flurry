@@ -20,8 +20,8 @@ static const int quadsPerBatch = 16;
 static int16_t* quadIndices;
 
 int main(void) {
-    display_init(RESOLUTION_320x240, DEPTH_32_BPP, 3, GAMMA_NONE,
-                 FILTERS_RESAMPLE);
+    display_init(RESOLUTION_320x240, DEPTH_16_BPP, 3, GAMMA_NONE,
+        FILTERS_RESAMPLE);
     rdpq_init();
 
     t3d_init((T3DInitParams){});
@@ -66,7 +66,6 @@ int main(void) {
         t3d_frame_start();
         rdpq_mode_begin();
         rdpq_mode_zbuf(false, false);
-        rdpq_mode_dithering(DITHER_NONE_NONE);
         rdpq_mode_antialias(AA_NONE);
         rdpq_mode_end();
 
@@ -91,6 +90,7 @@ int main(void) {
 
 void darkenBackground(float alpha, int32_t width, int32_t height) {
     rdpq_mode_begin();
+    rdpq_mode_dithering(DITHER_NONE_NONE);
     rdpq_mode_combiner(RDPQ_COMBINER_FLAT);
     rdpq_mode_blender(RDPQ_BLENDER_MULTIPLY);
     rdpq_mode_end();
@@ -158,6 +158,7 @@ void drawParticles(int numPrimitives,
     preparePackedVertices(numPrimitives, positionPtr, colorPtr, texcoordPtr);
 
     rdpq_mode_begin();
+    rdpq_mode_dithering(DITHER_NOISE_NOISE);
     rdpq_mode_combiner(RDPQ_COMBINER_SHADE);
     rdpq_mode_blender(RDPQ_BLENDER_ADDITIVE);
     rdpq_mode_end();
