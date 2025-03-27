@@ -20,6 +20,8 @@ OBJS = \
     $(BUILD_DIR)/core/Std.o      \
     $(BUILD_DIR)/core/Texture.o
 
+CXXFLAGS += -DFLURRY_TINY_TEXTURES
+
 
 flurry-tiny3d.z64: N64_ROM_TITLE="Flurry (Tiny3D)"
 

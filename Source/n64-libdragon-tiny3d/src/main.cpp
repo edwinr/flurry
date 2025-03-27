@@ -14,14 +14,16 @@ static void drawParticles(int numPrimitives,
                           float* colorPtr,
                           float* texcoordPtr);
 static void prepareQuadIndices();
+static void prepareTexture();
 
 static T3DVertPacked* packedVertices;
 static const int quadsPerBatch = 16;
 static int16_t* quadIndices;
+static surface_t texSurface;
 
 int main(void) {
     display_init(RESOLUTION_320x240, DEPTH_16_BPP, 3, GAMMA_NONE,
-        FILTERS_RESAMPLE);
+                 FILTERS_RESAMPLE);
     rdpq_init();
 
     t3d_init((T3DInitParams){});
@@ -51,6 +53,8 @@ int main(void) {
     t3d_viewport_set_ortho(&viewport, 0, width, 0, height, -1000.0f, 100.1f);
     t3d_viewport_set_view_matrix(&viewport, &viewMatrix);
 
+    prepareTexture();
+
     double time = 0.0;
     double deltaTime = 1.0 / 30.0;
     while (true) {
@@ -76,6 +80,8 @@ int main(void) {
         t3d_state_set_drawflags(T3D_FLAG_SHADED);
 
         darkenBackground(alpha, width, height);
+        t3d_state_set_drawflags(
+            (T3DDrawFlags)(T3D_FLAG_SHADED | T3D_FLAG_TEXTURED));
         drawParticles(info->s->numQuads * 4, (float*)info->s->seraphimVertices,
                       (float*)info->s->seraphimColors,
                       (float*)info->s->seraphimTextures);
@@ -118,6 +124,7 @@ void preparePackedVertices(int numPrimitives,
     const float scale = 10.0f;
     auto pos = positionPtr;
     auto col = colorPtr;
+    auto tex = texcoordPtr;
     auto packedVertex = packedVertices;
     for (int i = 0; i < numPrimitives; i += 4) {
         uint32_t color = (uint32_t)(saturate(col[0]) * 255.0f) << 24 |
@@ -139,13 +146,14 @@ void preparePackedVertices(int numPrimitives,
             packedVertex->rgbaA = color;
             packedVertex->rgbaB = color;
 
-            packedVertex->stA[0] = 0;
-            packedVertex->stA[1] = 0;
-            packedVertex->stB[0] = 0;
-            packedVertex->stB[1] = 0;
+            packedVertex->stA[0] = (int16_t)(tex[0] * 32.0f * 32.0f);
+            packedVertex->stA[1] = (int16_t)(tex[1] * 32.0f * 32.0f);
+            packedVertex->stB[0] = (int16_t)(tex[2] * 32.0f * 32.0f);
+            packedVertex->stB[1] = (int16_t)(tex[3] * 32.0f * 32.0f);
 
             pos += 4;
             col += 8;
+            tex += 4;
             ++packedVertex;
         }
     }
@@ -159,9 +167,13 @@ void drawParticles(int numPrimitives,
 
     rdpq_mode_begin();
     rdpq_mode_dithering(DITHER_NOISE_NOISE);
-    rdpq_mode_combiner(RDPQ_COMBINER_SHADE);
+    rdpq_mode_combiner(RDPQ_COMBINER_TEX_SHADE);
     rdpq_mode_blender(RDPQ_BLENDER_ADDITIVE);
     rdpq_mode_end();
+
+    rdpq_sync_tile();
+    rdpq_mode_tlut(TLUT_NONE);
+    rdpq_tex_upload(TILE0, &texSurface, NULL);
 
     auto completeBatches = numPrimitives / (quadsPerBatch * 4);
     for (int i = 0; i < completeBatches; ++i) {
@@ -199,4 +211,22 @@ void prepareQuadIndices() {
     }
 
     t3d_indexbuffer_convert(quadIndices, quadsPerBatch * 4);
+}
+
+void prepareTexture() {
+    auto bigTextureArray = new unsigned char[256 * 256 * 2];
+    MakeTexture((unsigned char(*)[256][2])bigTextureArray);
+
+    texSurface = surface_alloc(FMT_IA8, 32, 32);
+    auto ptrI = (uint8_t*)texSurface.buffer;
+    auto ptrA = ((uint8_t*)texSurface.buffer) + 32 * 32;
+    for (int y = 0; y < 32; y++) {
+        for (int x = 0; x < 32; x++) {
+            int index = (y * 256 + x) * 2;
+            *ptrI++ = bigTextureArray[index];
+            *ptrA++ = bigTextureArray[index + 1];
+        }
+    }
+
+    delete[] bigTextureArray;
 }
